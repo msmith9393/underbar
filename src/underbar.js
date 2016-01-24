@@ -477,5 +477,17 @@
   //
   // Note: This is difficult! It may take a while to implement.
   _.throttle = function(func, wait) {
+    var canTrigger = true;
+
+    return function() {
+      if (canTrigger) {
+        canTrigger = false;
+        return func.apply(null, arguments);
+      }
+      return setTimeout(function() {
+        canTrigger = true;
+      }, wait);
+    };
   };
+
 }());
