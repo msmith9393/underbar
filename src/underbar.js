@@ -350,6 +350,13 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
+    return _.map(collection, function(elem) {
+      if (typeof functionOrKey === "function") {
+        return functionOrKey.apply(elem, args);
+      } else {
+        return elem[functionOrKey](args);
+      }
+    });
   };
 
   // Sort the object's values by a criterion produced by an iterator.
@@ -357,6 +364,15 @@
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
   _.sortBy = function(collection, iterator) {
+    if (typeof iterator === "string") {
+      return collection.sort(function(a,b) {
+        return a[iterator] - b[iterator];
+      });
+    } else {
+      return collection.sort(function(a,b) {
+        return iterator(a) - iterator(b);
+      });
+    }
   };
 
   // Zip together two or more arrays with elements of the same index
@@ -372,6 +388,14 @@
   //
   // Hint: Use Array.isArray to check if something is an array
   _.flatten = function(nestedArray, result) {
+    return _.reduce(nestedArray, function(flatArr, elem) {
+      if (!Array.isArray(elem)) {
+        flatArr.push(elem);
+      } else {
+        flatArr = flatArr.concat(_.flatten(elem));
+      }
+      return flatArr;
+    }, []);
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
