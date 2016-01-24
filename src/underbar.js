@@ -159,12 +159,12 @@
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
     var initialize = accumulator === undefined;
-    _.each(collection, function(elem) {
+    _.each(collection, function(elem, indexOrKey, list) {
       if (initialize) {
         accumulator = collection[0];
         initialize = false;
       } else {
-        accumulator = iterator(accumulator, elem);
+        accumulator = iterator(accumulator, elem, indexOrKey, list);
       }
     });
     return accumulator;
@@ -381,6 +381,21 @@
   // Example:
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    var args = Array.prototype.slice.call(arguments);
+    var numArrs = _.reduce(_.map(args, function(arr) {return arr.length}), function(max, curr) {return max >= curr ? max : curr});
+    var zipped = [];
+
+    for (var i=0; i<numArrs; i++) {
+      zipped.push([]);
+    }
+
+    for (var i=0; i<args.length; i++) {
+      for (var j=0; j<numArrs; j++) {
+        zipped[i].push(args[j][i]);
+      }
+    }
+
+    return zipped;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
@@ -401,12 +416,60 @@
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var arrs = Array.prototype.slice.call(arguments);
+    var count = arrs.length;
+    var intersect = {};
+    var res = [];
+
+    _.each(arrs, function(arr) {
+      _.each(arr, function(elem) {
+        if (!intersect.hasOwnProperty(elem)) {
+          intersect[elem] = 1;
+        } else {
+          intersect[elem] ++;
+        }
+      });
+    });
+
+    _.each(intersect, function(val, key) {
+      if (val === count) {
+        res.push(key);
+      }
+    });
+
+    return res;
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var otherArrs = Array.prototype.slice.call(arguments, 1);
+    var container = {};
+    
+    _.each(array, function(elem) {
+      container[elem] = true;
+    });
+
+    _.each(otherArrs, function(arr) {
+      _.each(arr, function(elem) {
+        container[elem] = false;
+      });
+    });
+
+    return _.reduce(container, function(differentArr, val, key) {
+      if (val) {
+        if (typeof parseInt(key) === "number") {
+          differentArr.push(parseInt(key));
+        } else {
+          differentArr.push(key);
+        }
+      }
+      return differentArr;
+    }, []);
   };
+
+  // var diff = _.difference([1,2,3], [2,30,40]);
+  // expect(diff).to.eql([1,3]);
 
   // Returns a function, that, when invoked, will only be triggered at most once
   // during a given window of time.  See the Underbar readme for extra details
